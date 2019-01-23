@@ -77,7 +77,7 @@ public class ConcurrentExpiryCache implements ICache {
     }
 
     public void remove(final String key) {
-        cache.remove(key);
+        cache.forEachKey(1_000, (k) -> cache.remove(key));
     }
 
     public void clear() {
