@@ -8,6 +8,7 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.TimeUnit;
 
 public class ConcurrentExpiryCache implements ICache {
+
     private final static int DEFAULT_CAPACITY = 10;
     private final static int DEFAULT_EXPIRY_MILLIS = 3000;
 
@@ -17,7 +18,8 @@ public class ConcurrentExpiryCache implements ICache {
     private final long expiryDurationInMillis;
     private final int capacity;
 
-    private ConcurrentExpiryCache(int capacity, long expiryTime, TimeUnit timeUnit, INotification notifier) {
+    private ConcurrentExpiryCache(int capacity, long expiryTime, TimeUnit timeUnit,
+            INotification notifier) {
         this.capacity = capacity;
         this.expiryDurationInMillis = timeUnit.toMillis(expiryTime);
         final Runnable cacheCleanerTask = new CacheCleanerTask(cache, delayQueue, notifier);
@@ -44,7 +46,7 @@ public class ConcurrentExpiryCache implements ICache {
             System.out.println("Cache full, please wait for the expiry period.");
             return;
         }
-        if (Objects.isNull(key)) {
+        if (key == null) {
             return;
         }
         cache.put(key, value);
@@ -59,10 +61,10 @@ public class ConcurrentExpiryCache implements ICache {
     }
 
     public Object get(final String key) {
-        if (Objects.isNull(key)) {
+        if (Objects.isNull(key))
             return null;
-        }
-        Object value = cache.get(key);
+
+        final Object value = cache.search(1_00, (k, v) -> k.equals(key) ? v : null);
         if (value != null) {
             addToDelayQueue(key, value);
             return value;
@@ -123,7 +125,7 @@ public class ConcurrentExpiryCache implements ICache {
         public ConcurrentExpiryCache build() {
             int capacityLimit = capacity == null ? DEFAULT_CAPACITY : capacity;
             long expiryTime = this.expiryTime <= 0 ? DEFAULT_EXPIRY_MILLIS : this.expiryTime;
-            TimeUnit unit = this.timeUnit == null ? TimeUnit.MILLISECONDS: timeUnit;
+            TimeUnit unit = this.timeUnit == null ? TimeUnit.MILLISECONDS : timeUnit;
 
             return new ConcurrentExpiryCache(capacityLimit, expiryTime, unit, notifier);
         }
